@@ -81,13 +81,48 @@ Exit:
 	return Return_Value;
 }
 
+/** Compute a rate in an human-understandable way.
+ * @param Previous_Bytes_Count How many bytes were received or sent by the interface last time (i.e., during the previous sampling loop).
+ * @param Current_Bytes_Count How many bytes were received or sent by the interface now.
+ * @param Pointer_Rate On output, contain the rate adapted to the appropriate prefix (giga, mega, kilo...).
+ * @param Pointer_Multiple_Prefix On output, contain the rate prefix ('G' for giga, 'M' for mega...).
+ */
+static void ComputeRate(unsigned long long Previous_Bytes_Count, unsigned long long Current_Bytes_Count, float *Pointer_Rate, char *Pointer_Multiple_Prefix)
+{
+	float Rate;
+	
+	// Compute the rate in bytes/second
+	Rate = Current_Bytes_Count - Previous_Bytes_Count;
+	
+	// Convert the rate to an human-readable form
+	if (Rate >= 1000000000.f)
+	{
+		Rate /= 1000000000.f;
+		*Pointer_Multiple_Prefix = 'G';
+	}
+	else if (Rate >= 1000000.f)
+	{
+		Rate /= 1000000.f;
+		*Pointer_Multiple_Prefix = 'M';
+	}
+	else if (Rate >= 1000.f)
+	{
+		Rate /= 1000.f;
+		*Pointer_Multiple_Prefix = 'K';
+	}
+	else *Pointer_Multiple_Prefix = ' ';
+	
+	*Pointer_Rate = Rate;
+}
+
 //-------------------------------------------------------------------------------------------------
 // Entry point
 //-------------------------------------------------------------------------------------------------
 int main(void)
 {
 	int Interfaces_Count, i;
-	float Reception_Rate, Transmission_Rate;
+	float Rate;
+	char Multiple_Prefix;
 	
 	// Make sure previous transmission and reception values are zero
 	memset(Interfaces_Statistics, 0, sizeof(Interfaces_Statistics));
@@ -112,15 +147,26 @@ int main(void)
 		// Display interfaces statistics
 		for (i = 0; i < Interfaces_Count; i++)
 		{
-			// Compute rates
-			Reception_Rate = Interfaces_Statistics[i].Current_Received_Bytes_Count - Interfaces_Statistics[i].Previous_Received_Bytes_Count;
-			Transmission_Rate = Interfaces_Statistics[i].Current_Transmitted_Bytes_Count - Interfaces_Statistics[i].Previous_Transmitted_Bytes_Count;
+			// Display interface rates
+			// Interface name
+			printf("%s \t:", Interfaces_Statistics[i].String_Interface_Name);
+			// Reception rate in bit/s
+			ComputeRate(Interfaces_Statistics[i].Previous_Received_Bytes_Count * 8, Interfaces_Statistics[i].Current_Received_Bytes_Count * 8, &Rate, &Multiple_Prefix);
+			printf(" RX = %.1f %cbit/s", Rate, Multiple_Prefix);
+			// Reception rate in byte/s
+			ComputeRate(Interfaces_Statistics[i].Previous_Received_Bytes_Count, Interfaces_Statistics[i].Current_Received_Bytes_Count, &Rate, &Multiple_Prefix);
+			printf(" (%.1f %cbyte/s)", Rate, Multiple_Prefix);
+			// Transmission rate in bit/s
+			ComputeRate(Interfaces_Statistics[i].Previous_Transmitted_Bytes_Count * 8, Interfaces_Statistics[i].Current_Transmitted_Bytes_Count * 8, &Rate, &Multiple_Prefix);
+			printf(", TX = %.1f %cbit/s", Rate, Multiple_Prefix);
+			// Transmission rate in byte/s
+			ComputeRate(Interfaces_Statistics[i].Previous_Transmitted_Bytes_Count, Interfaces_Statistics[i].Current_Transmitted_Bytes_Count, &Rate, &Multiple_Prefix);
+			printf(" (%.1f %cbyte/s)\n", Rate, Multiple_Prefix);
 			
 			// Update previous rate value
 			Interfaces_Statistics[i].Previous_Received_Bytes_Count = Interfaces_Statistics[i].Current_Received_Bytes_Count;
 			Interfaces_Statistics[i].Previous_Transmitted_Bytes_Count = Interfaces_Statistics[i].Current_Transmitted_Bytes_Count;
-			
-			printf("%s \t: RX = %.1f Kbit/s (%.1f Kbyte/s), TX = %.1f Kbit/s (%.1f Kbyte/s)\n", Interfaces_Statistics[i].String_Interface_Name, Reception_Rate * 8.f / 1000.f, Reception_Rate / 1000.f, Transmission_Rate * 8.f / 1000.f, Transmission_Rate / 1000.f);
+
 		}
 		
 		// Wait one second
