@@ -106,7 +106,9 @@ int main(void)
 		
 		// Clear screen
 		printf("\033[2J");
-			
+		
+		printf("Linux netspeed. (C) 2017 Adrien Ricciardi. Hit Ctrl+C to exit.\n");
+		
 		// Display interfaces statistics
 		for (i = 0; i < Interfaces_Count; i++)
 		{
@@ -120,7 +122,6 @@ int main(void)
 			
 			printf("%s \t: RX = %.1f Kbit/s (%.1f Kbyte/s), TX = %.1f Kbit/s (%.1f Kbyte/s)\n", Interfaces_Statistics[i].String_Interface_Name, Reception_Rate * 8.f / 1000.f, Reception_Rate / 1000.f, Transmission_Rate * 8.f / 1000.f, Transmission_Rate / 1000.f);
 		}
-		printf("Hit Ctrl+C to exit.\n");
 		
 		// Wait one second
 		usleep(1000000);
