@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 //-------------------------------------------------------------------------------------------------
-// Private constants
+// Private constants and macros
 //-------------------------------------------------------------------------------------------------
 /** Network interface name (like eth0). */
 #define INTERFACE_NAME_LENGTH 16
@@ -17,6 +17,17 @@
 
 /** The file to parse to get network statistics. */
 #define NETWORK_STATISTICS_FILE_NAME "/proc/net/dev"
+
+/** First "stringification" macro expansion step.
+ * @param X The constant value to convert to string.
+ */
+#define CONVERT_MACRO_TO_VALUE(X) #X
+
+/** Second "stringification" macro expansion step.
+ * @param X The constant value to convert to string.
+ * @return The constant value converted to string.
+ */
+#define CONVERT_MACRO_TO_STRING(X) CONVERT_MACRO_TO_VALUE(X)
 
 //-------------------------------------------------------------------------------------------------
 // Private types
@@ -65,8 +76,7 @@ static inline int GetInterfacesStatistics(void)
 		if (fgets(String_Line, sizeof(String_Line), Pointer_File) == NULL) break;
 		
 		// Extract interface name and values ('*' character tells scanf() to discard a value)
-		// TODO add a limit for the interface name string
-		sscanf(String_Line, "%s %llu %*u %*u %*u %*u %*u %*u %*u %llu", Interfaces_Statistics[i].String_Interface_Name, &Interfaces_Statistics[i].Current_Received_Bytes_Count, &Interfaces_Statistics[i].Current_Transmitted_Bytes_Count);
+		sscanf(String_Line, "%" CONVERT_MACRO_TO_STRING(INTERFACE_NAME_LENGTH) "s %llu %*u %*u %*u %*u %*u %*u %*u %llu", Interfaces_Statistics[i].String_Interface_Name, &Interfaces_Statistics[i].Current_Received_Bytes_Count, &Interfaces_Statistics[i].Current_Transmitted_Bytes_Count);
 		
 		// Remove the trailing ':' in the interface name
 		Interface_Name_Length = strlen(Interfaces_Statistics[i].String_Interface_Name);
