@@ -141,6 +141,8 @@ int main(void)
 		
 		// Clear screen
 		printf("\033[2J");
+		// Move cursor to left upper corner
+		printf("\033[H");
 		
 		printf("Linux netspeed. (C) 2017 Adrien Ricciardi. Hit Ctrl+C to exit.\n");
 		
